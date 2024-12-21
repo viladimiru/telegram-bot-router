@@ -25,7 +25,8 @@ export const routeTwo: Route<Props2> = {
   initialMessage(props) {
     return [props.test2, {}];
   },
-  onMessage(_props, _sendMessage, navigate) {
+  onMessage(_props, _sendMessage, navigate, updateProps) {
+    updateProps({test2: 'lol'});
     navigate(routeOne, {
       test: 'navigated from test2',
     });
