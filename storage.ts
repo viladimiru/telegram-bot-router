@@ -9,7 +9,7 @@ export interface RouteData {
 
 interface Storage {
 	saveSession: (chatId: number, routeData: RouteData) => void;
-	getSession: (chatId: number) => RouteData;
+	getSession: (chatId: number) => RouteData | undefined;
 }
 
 export function createStorage(): Storage {
@@ -20,13 +20,6 @@ export function createStorage(): Storage {
 		},
 		getSession: (chatId) => {
 			const session = sessionStorage.get(chatId);
-			if (!session) {
-				return {
-					path: 'main',
-					props: {},
-				}
-			}
-
 			return session
 		},
 	}
