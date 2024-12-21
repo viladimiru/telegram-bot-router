@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-router",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Telegram bot router with ability to propagate properties between routes",
   "keywords": [
     "tg",
