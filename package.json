@@ -9,15 +9,20 @@
     "telegram-bot"
   ],
   "type": "module",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "eslint-fix": "eslint . --fix",
     "prettier-fix": "prettier . --write",
-    "prepare": "husky && husky install",
-    "start": "node --watch --loader ts-node/esm bot.ts"
+    "prepare": "husky && husky install"
   },
   "author": "Vladimir Valerianov",
   "license": "MIT",
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@types/eslint-config-prettier": "^6.11.3",
