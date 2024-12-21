@@ -9,6 +9,8 @@ import {
 import {createStorage, Storage} from './storage';
 import type {SendMessageOptions, Message} from 'node-telegram-bot-api';
 
+const test = '';
+
 type RouteWithProps = Route<Props>;
 
 export interface Router {
