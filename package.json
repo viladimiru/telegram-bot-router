@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-router",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Telegram bot router with ability to propagate properties between routes",
   "keywords": [
     "tg",
@@ -23,6 +23,9 @@
       "types": "./dist/types/index.d.ts"
     }
   },
+  "files": [
+    "dist/**"
+  ],
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@types/eslint-config-prettier": "^6.11.3",

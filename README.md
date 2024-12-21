@@ -7,7 +7,9 @@ This library was created to resolve navigation proposals for telegram bots.
 `npm i telegram-bot-router`
 
 ```
-import {createRouter} from 'telegram-bot-router';
+import {createRouter, Route} from 'telegram-bot-router';
+import TelegramApi from 'node-telegram-bot-api'
+
 interface RouteOneProps {
   text: string;
 }
