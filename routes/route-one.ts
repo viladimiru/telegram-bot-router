@@ -1,4 +1,4 @@
-import {Route} from '../create-route';
+import {Route} from '../route';
 
 interface Props1 {
   test: string;

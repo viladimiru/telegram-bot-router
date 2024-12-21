@@ -4,13 +4,15 @@ import {
   Route,
   SendMessage,
   SendMessageCallback,
-} from './create-route';
+} from './route';
 import {createStorage, Storage} from './storage';
 import type {SendMessageOptions, Message} from 'node-telegram-bot-api';
 
+type RouteWithProps = Route<Props>;
+
 export interface Router {
-  setEntryRoute(route: Route<Props>): this;
-  registerRoute(route: Route<Props>): this;
+  setEntryRoute(route: RouteWithProps): this;
+  registerRoute(route: RouteWithProps): this;
   registerSendMessageCallback(sendMessageCallback: SendMessageCallback): this;
   createNavigator(): Navigator;
 }
@@ -20,16 +22,16 @@ export interface Navigator {
 }
 
 interface RouteRegistry {
-  entryRoute: Route<Props>;
-  routes: Route<Props>[];
+  entryRoute: RouteWithProps;
+  routes: RouteWithProps[];
 }
 
 interface RawRouteRegistry extends Omit<RouteRegistry, 'entryRoute'> {
   entryRoute?: RouteRegistry['entryRoute'];
 }
 
-interface RouteWithProps {
-  route: Route<Props>;
+interface SessionRouteWithProps {
+  route: RouteWithProps;
   props: Props;
 }
 
@@ -84,7 +86,7 @@ function createNavigator(
 ): Navigator {
   const storage = createStorage();
 
-  function navigate(chatId: number, route: Route<Props>, props: Props): void {
+  function navigate(chatId: number, route: RouteWithProps, props: Props): void {
     storage.saveSession(chatId, {
       routeId: route.id,
       props,
@@ -125,7 +127,7 @@ function getCurrentRouteWithProps(
   routeRegistry: RouteRegistry,
   storage: Storage,
   chatId: number,
-): RouteWithProps {
+): SessionRouteWithProps {
   const routeData = storage.getSession(chatId);
   const fallbackRoute = {route: routeRegistry.entryRoute, props: {}};
   if (!routeData) {
