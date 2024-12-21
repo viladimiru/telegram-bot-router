@@ -2,6 +2,10 @@ import {RenderReturnType, Route, SendMessage} from './create-route';
 import {createStorage} from './storage';
 import type {Message, SendMessageOptions} from 'node-telegram-bot-api';
 
+export type ExtractRouterNavigation<R extends Router> = (
+  arg1: Parameters<R['navigate']>[1],
+) => void;
+
 export type RouteMap = Record<string, Route> & {
   main: Route & {render: () => RenderReturnType};
 };
@@ -12,7 +16,7 @@ type SendMessageCallback = (
   options: SendMessageOptions,
 ) => void;
 
-interface Router<R extends RouteMap> {
+export interface Router<R extends RouteMap = RouteMap> {
   navigate: (chatId: number, args: NavigationArguments<R>) => void;
   getActiveRoute: (message: Message) => void;
 
@@ -40,16 +44,18 @@ export function createRouter<R extends RouteMap>(routes: R): Router<R> {
     return sendMessage.bind({}, chatId);
   }
 
-  return {
-    navigate(chatId, parameters) {
-      storage.saveSession(chatId, parameters);
-      const route = freezedRoutes[parameters.path];
-      if (!route) {
-        throw new Error('unexpected router path' + String(parameters.path));
-      }
+  function navigate(chatId: number, parameters: NavigationArguments<R>): void {
+    storage.saveSession(chatId, parameters);
+    const route = freezedRoutes[parameters.path];
+    if (!route) {
+      throw new Error('unexpected router path' + String(parameters.path));
+    }
 
-      route.render(parameters.props);
-    },
+    route.render(parameters.props);
+  }
+
+  return {
+    navigate,
     getActiveRoute(message) {
       const chatId = message.chat.id;
 
@@ -68,7 +74,12 @@ export function createRouter<R extends RouteMap>(routes: R): Router<R> {
         throw new Error('unexpected router path' + String(session.path));
       }
 
-      route.onAnswer(session.props, getSendMessage(chatId));
+      route.onAnswer(
+        session.props,
+        getSendMessage(chatId),
+        // @ts-expect-error TODO: need to fix this
+        navigate.bind(null, chatId),
+      );
     },
     setSendMessageCallback(sendMessageCallback) {
       sendMessage = sendMessageCallback;

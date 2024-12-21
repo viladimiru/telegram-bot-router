@@ -25,10 +25,13 @@
     "suppressExcessPropertyErrors": false,
     "suppressImplicitAnyIndexErrors": false,
     "noStrictGenericChecks": false,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "sourceMap": true
   },
   "ts-node": {
     "esm": true,
-    "experimentalSpecifierResolution": "node"
+    "experimentalSpecifierResolution": "node",
+    "logError": true
   }
 }

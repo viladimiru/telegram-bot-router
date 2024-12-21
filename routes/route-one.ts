@@ -1,5 +1,22 @@
-export function routeOne(props: {one: number}): never {
-  console.log(props);
-  // @ts-expect-error this is just a plug
-  return ['text', {} as never];
+import {Route} from '../create-route';
+import type {Navigate} from '../router';
+
+interface Props {
+  test: string;
+}
+
+export function createRouteOne(): Route<Props> {
+  return {
+    render(props) {
+      return [props.test, {}];
+    },
+    onAnswer(_props, _sendMessage, navigate: Navigate) {
+      navigate({
+        path: 'one',
+        props: {
+          test: 'sdfa',
+        },
+      });
+    },
+  };
 }

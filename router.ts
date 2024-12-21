@@ -1,11 +1,14 @@
-import {createRoute} from './create-route';
-import {createRouter} from './create-router';
+import {createRouter, ExtractRouterNavigation} from './create-router';
+import {createRouteOne} from './routes/route-one';
+
+export type Navigate = ExtractRouterNavigation<typeof router>;
 
 export const router = createRouter({
-  main: createRoute({
-    render: () => ['main page', {}],
-    onAnswer(_props, sendMessage) {
-      sendMessage('answer on message', {});
+  main: {
+    render() {
+      return ['asd', {}];
     },
-  }),
+    onAnswer() {},
+  },
+  one: createRouteOne(),
 });
