@@ -6,7 +6,9 @@ const bot = new TelegramApi('8174942083:AAHK6JlQRkApBb7gtban0DxigEa0WMP-kjI', {
 });
 
 bot.on('message', (message) => {
-	bot.sendMessage(...router.renderActiveRoute(message))
+	router.getActiveRoute(message)
 })
 
 bot.on('polling_error', (error) => console.log(error));
+
+router.setSendMessageCallback(bot.sendMessage.bind(bot));

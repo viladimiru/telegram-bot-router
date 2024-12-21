@@ -1,4 +1,4 @@
-import { RenderReturnType, Route } from './create-route';
+import { RenderReturnType, Route, SendMessage } from './create-route';
 import { createStorage } from './storage';
 import type { Message } from 'node-telegram-bot-api';
 
@@ -6,9 +6,12 @@ export type RouteMap =
 	Record<string, Route> &
 	{ main: Route & { render: () => RenderReturnType } };
 
+
 interface Router<R extends RouteMap> {
 	navigate: (chatId: number, args: NavigationArguments<R>) => void;
-	renderActiveRoute: (message: Message) => [number, ...ReturnType<Route['render']>];
+	getActiveRoute: (message: Message) => void;
+
+	setSendMessageCallback: (sendMessage: SendMessage) => void;
 }
 
 type NavigationArguments<R extends RouteMap> = {
@@ -22,6 +25,16 @@ export function createRouter<R extends RouteMap>(routes: R): Router<R> {
 	const storage = createStorage();
 	const freezedRoutes = Object.freeze(routes);
 
+	let sendMessage: SendMessage | undefined;
+
+	function getSendMessage(): SendMessage {
+		if (!sendMessage) {
+			throw new Error('send message callback is not specified');
+		}
+
+		return sendMessage;
+	}
+
 	return {
 		navigate(chatId, parameters) {
 			storage.saveSession(chatId, parameters);
@@ -32,22 +45,33 @@ export function createRouter<R extends RouteMap>(routes: R): Router<R> {
 
 			route.render(parameters.props)
 		},
-		renderActiveRoute(message) {
+		getActiveRoute(message) {
 			const chatId = message.chat.id;
 
 			const session = storage.getSession(chatId);
-			const route = freezedRoutes[session.path as string]; // TODO: fix
 			// TODO: figure out why I need to use brackets here
-			if (!route && freezedRoutes['main']) {
-				return [chatId, ...freezedRoutes['main'].render({})]
-
+			if (!session && freezedRoutes['main']) {
+				storage.saveSession(chatId, {
+					path: 'main',
+					props: {},
+				});
+				getSendMessage()(chatId, ...freezedRoutes['main'].render({}));
+				return;
 			}
 
+			if (!session) {
+				throw new Error('no session data and main route is not specified');
+			}
+
+			const route = freezedRoutes[session.path as string]; // TODO: fix
 			if (!route) {
 				throw new Error('unexpected router path' + String(session.path));
 			}
 
-			return [chatId, ...route.render(session.props)];
+			route.onAnswer(session.props, chatId, getSendMessage());
+		},
+		setSendMessageCallback(sendMessageCallback) {
+			sendMessage = sendMessageCallback;
 		}
 	}
 }
