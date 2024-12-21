@@ -4,7 +4,10 @@ This library was created to resolve navigation proposals for telegram bots.
 
 ## Quick start
 
+`npm i telegram-bot-router`
+
 ```
+import {createRouter} from 'telegram-bot-router';
 interface RouteOneProps {
   text: string;
 }
