@@ -1,7 +1,13 @@
 {
-  "name": "telegram-framework",
+  "name": "telegram-bot-router",
   "version": "1.0.0",
-  "description": "",
+  "description": "Telegram bot router",
+  "keywords": [
+    "tg",
+    "telegram",
+    "node",
+    "telegram-bot"
+  ],
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -11,7 +17,7 @@
     "start": "node --watch --loader ts-node/esm bot.ts"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@types/eslint-config-prettier": "^6.11.3",
