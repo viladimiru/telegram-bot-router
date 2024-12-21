@@ -1,9 +1,9 @@
-import { RenderReturnType, Route, SendMessage } from './create-route';
-import { createStorage } from './storage';
-import type { Message, SendMessageOptions } from 'node-telegram-bot-api';
+import {RenderReturnType, Route, SendMessage} from './create-route';
+import {createStorage} from './storage';
+import type {Message, SendMessageOptions} from 'node-telegram-bot-api';
 
 export type RouteMap = Record<string, Route> & {
-  main: Route & { render: () => RenderReturnType };
+  main: Route & {render: () => RenderReturnType};
 };
 
 type SendMessageCallback = (
