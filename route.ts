@@ -1,4 +1,4 @@
-import {SendMessageOptions} from 'node-telegram-bot-api';
+import type {SendMessageOptions} from 'node-telegram-bot-api';
 
 export type Props = object;
 
