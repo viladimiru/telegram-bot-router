@@ -1,7 +1,7 @@
 {
   "name": "telegram-bot-router",
   "version": "1.0.0",
-  "description": "Telegram bot router",
+  "description": "Telegram bot router with ability to propagate properties between routes",
   "keywords": [
     "tg",
     "telegram",
@@ -16,7 +16,7 @@
     "prepare": "husky && husky install",
     "start": "node --watch --loader ts-node/esm bot.ts"
   },
-  "author": "",
+  "author": "Vladimir Valerianov",
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.13.0",
@@ -31,10 +31,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.11.0"
-  },
-  "dependencies": {
-    "dotenv": "^16.4.5",
-    "node-telegram-bot-api": "^0.66.0"
   },
   "lint-staged": {
     "*.{ts,js,json,md}": [
