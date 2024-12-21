@@ -1,5 +1,5 @@
-import { createRoute } from './create-route';
-import { createRouter } from './create-router';
+import {createRoute} from './create-route';
+import {createRouter} from './create-router';
 
 export const router = createRouter({
   main: createRoute({
