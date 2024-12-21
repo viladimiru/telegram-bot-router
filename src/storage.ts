@@ -1,4 +1,4 @@
-import {Props} from './route';
+import {Props} from './route.js';
 
 export interface RouteData {
   routeId: string;

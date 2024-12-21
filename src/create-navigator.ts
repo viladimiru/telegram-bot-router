@@ -1,13 +1,20 @@
 import {
+  AnswerCallbackQuery,
+  AnswerCallbackQueryCallback,
   Navigate,
   Props,
   Route,
   SendMessage,
   SendMessageCallback,
   UpdateProps,
-} from './route';
-import {createStorage, Storage} from './storage';
-import type {SendMessageOptions, Message} from 'node-telegram-bot-api';
+} from './route.js';
+import {createStorage, Storage} from './storage.js';
+import type {
+  SendMessageOptions,
+  Message,
+  CallbackQuery,
+  AnswerCallbackQueryOptions,
+} from 'node-telegram-bot-api';
 
 type RouteWithProps = Route<Props>;
 
@@ -15,11 +22,15 @@ export interface Router {
   setEntryRoute(route: RouteWithProps): this;
   registerRoute(route: RouteWithProps): this;
   registerSendMessageCallback(sendMessageCallback: SendMessageCallback): this;
+  registerAnswerCallbackQueryCallback(
+    answerCallbackQueryCallback: AnswerCallbackQueryCallback,
+  ): this;
   createNavigator(): Navigator;
 }
 
 export interface Navigator {
   onMessage(message: Message): void;
+  onCallbackQuery(query: CallbackQuery): void;
 }
 
 interface RouteRegistry {
@@ -34,6 +45,7 @@ interface RawRouteRegistry extends Omit<RouteRegistry, 'entryRoute'> {
 interface SessionRouteWithProps {
   route: RouteWithProps;
   props: Props;
+  initial?: boolean;
 }
 
 export function createRouter(): Router {
@@ -41,6 +53,7 @@ export function createRouter(): Router {
     routes: [],
   };
   let _sendMessageCallback: SendMessageCallback | undefined;
+  let _answerCallbackQueryCallback: AnswerCallbackQueryCallback | undefined;
 
   return {
     setEntryRoute(route) {
@@ -62,6 +75,10 @@ export function createRouter(): Router {
       _sendMessageCallback = sendMessageCallback;
       return this;
     },
+    registerAnswerCallbackQueryCallback(answerCallbackQueryCallback) {
+      _answerCallbackQueryCallback = answerCallbackQueryCallback;
+      return this;
+    },
     createNavigator() {
       const {entryRoute, routes} = routeRegistry;
       if (!entryRoute) {
@@ -76,7 +93,17 @@ export function createRouter(): Router {
         );
       }
 
-      return createNavigator({entryRoute, routes}, _sendMessageCallback);
+      if (!_answerCallbackQueryCallback) {
+        throw new Error(
+          'Unable to create navigator without answerCallbackQueryCallback in registry',
+        );
+      }
+
+      return createNavigator(
+        {entryRoute, routes},
+        _sendMessageCallback,
+        _answerCallbackQueryCallback,
+      );
     },
   };
 }
@@ -84,6 +111,7 @@ export function createRouter(): Router {
 function createNavigator(
   routeRegistry: RouteRegistry,
   sendMessageCallback: SendMessageCallback,
+  answerCallbackQueryCallback: AnswerCallbackQueryCallback,
 ): Navigator {
   const storage = createStorage();
 
@@ -107,25 +135,60 @@ function createNavigator(
     storage.updateProps(chatId, newProps);
   }
 
+  function answerCallbackQuery(
+    callbackQueryData: string,
+    options: AnswerCallbackQueryOptions,
+  ): void {
+    answerCallbackQueryCallback(callbackQueryData, options);
+  }
+
+  function getSessionMethods(chatId: number) {
+    const sessionNavigate: Navigate = (route, props) => {
+      navigate(chatId, route, props);
+    };
+
+    const sessionSendMessage: SendMessage = (text, options) => {
+      sendMessage(chatId, text, options);
+    };
+
+    const sessionUpdateProps: UpdateProps<Props> = (props) => {
+      updateProps(chatId, props);
+    };
+
+    const sessionAnswerCallbackQuery: AnswerCallbackQuery = (
+      callbackQueryData,
+      options,
+    ) => {
+      answerCallbackQuery(callbackQueryData, options);
+    };
+
+    return {
+      sessionNavigate,
+      sessionSendMessage,
+      sessionUpdateProps,
+      sessionAnswerCallbackQuery,
+    };
+  }
+
   return {
     onMessage(message) {
-      const {route, props} = getCurrentRouteWithProps(
+      const {route, props, initial} = getCurrentRouteWithProps(
         routeRegistry,
         storage,
         message.chat.id,
       );
 
-      const sessionNavigate: Navigate = (route, props) => {
-        navigate(message.chat.id, route, props);
-      };
+      if (initial) {
+        storage.saveSession(message.chat.id, {
+          routeId: routeRegistry.entryRoute.id,
+          props: {},
+        });
+        sendMessageCallback(message.chat.id, ...route.initialMessage({}));
+        return;
+      }
 
-      const sessionSendMessage: SendMessage = (text, options) => {
-        sendMessage(message.chat.id, text, options);
-      };
-
-      const sessionUpdateProps: UpdateProps<Props> = (props) => {
-        updateProps(message.chat.id, props);
-      };
+      const {sessionNavigate, sessionSendMessage, sessionUpdateProps} =
+        getSessionMethods(message.chat.id);
 
       route.onMessage(
         props,
@@ -133,6 +196,34 @@ function createNavigator(
         sessionNavigate,
         sessionUpdateProps,
         message.text,
+      );
+    },
+    onCallbackQuery(query: CallbackQuery): void {
+      if (!query.message) {
+        throw new Error('Unhandled error. Query without message.');
+      }
+
+      const message = query.message;
+      const {route, props} = getCurrentRouteWithProps(
+        routeRegistry,
+        storage,
+        message.chat.id,
+      );
+
+      const {
+        sessionNavigate,
+        sessionSendMessage,
+        sessionUpdateProps,
+        sessionAnswerCallbackQuery,
+      } = getSessionMethods(message.chat.id);
+
+      route.onCallback(
+        props,
+        sessionSendMessage,
+        sessionNavigate,
+        sessionUpdateProps,
+        query,
+        sessionAnswerCallbackQuery,
       );
     },
   };
@@ -144,10 +235,14 @@ function getCurrentRouteWithProps(
   chatId: number,
 ): SessionRouteWithProps {
   const routeData = storage.getSession(chatId);
-  const fallbackRoute = {route: routeRegistry.entryRoute, props: {}};
+  const entryRoute = {
+    route: routeRegistry.entryRoute,
+    props: {},
+    initial: true,
+  };
   if (!routeData) {
     console.log('Session data is empty, returning entry route');
-    return fallbackRoute;
+    return entryRoute;
   }
 
   const activeRoute = routeRegistry.routes.find(
@@ -161,7 +256,7 @@ function getCurrentRouteWithProps(
         'Fallbacking on entry route.',
       ].join(' '),
     );
-    return fallbackRoute;
+    return entryRoute;
   }
 
   return {
