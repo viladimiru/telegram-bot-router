@@ -20,5 +20,10 @@ export type Navigate = <R extends Route<Props>>(
 export interface Route<P extends Props> {
   id: string;
   initialMessage(props: P): RenderReturnType;
-  onMessage(props: P, sendMessage: SendMessage, navigate: Navigate): void;
+  onMessage(
+    props: P,
+    sendMessage: SendMessage,
+    navigate: Navigate,
+    text?: string,
+  ): void;
 }
