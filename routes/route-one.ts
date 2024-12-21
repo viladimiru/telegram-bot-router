@@ -10,7 +10,7 @@ export function createRouteOne(): Route<Props> {
     render(props) {
       return [props.test, {}];
     },
-    onAnswer(_props, _sendMessage, navigate: Navigate) {
+    onMessage(_props, _sendMessage, navigate: Navigate) {
       navigate({
         path: 'one',
         props: {
