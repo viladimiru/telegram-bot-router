@@ -1,10 +1,6 @@
-// TODO: get rid of this dependency
-import { Props } from './create-route';
-
 export interface RouteData {
-	// TODO: fix unknown type
-	path: unknown;
-	props: Props;
+	path: string;
+	props: Record<string, unknown>;
 }
 
 interface Storage {

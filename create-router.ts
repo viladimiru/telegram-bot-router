@@ -1,17 +1,18 @@
 import { RenderReturnType, Route, SendMessage } from './create-route';
 import { createStorage } from './storage';
-import type { Message } from 'node-telegram-bot-api';
+import type { Message, SendMessageOptions } from 'node-telegram-bot-api';
 
 export type RouteMap =
 	Record<string, Route> &
 	{ main: Route & { render: () => RenderReturnType } };
 
+type SendMessageCallback = (chatId: number, message: string, options: SendMessageOptions) => void;
 
 interface Router<R extends RouteMap> {
 	navigate: (chatId: number, args: NavigationArguments<R>) => void;
 	getActiveRoute: (message: Message) => void;
 
-	setSendMessageCallback: (sendMessage: SendMessage) => void;
+	setSendMessageCallback: (sendMessage: SendMessageCallback) => void;
 }
 
 type NavigationArguments<R extends RouteMap> = {
@@ -19,20 +20,20 @@ type NavigationArguments<R extends RouteMap> = {
 		path: K;
 		props: Parameters<R[K]['render']>[0];
 	}
-}[keyof R]
+}[Extract<keyof R, string>]
 
 export function createRouter<R extends RouteMap>(routes: R): Router<R> {
 	const storage = createStorage();
 	const freezedRoutes = Object.freeze(routes);
 
-	let sendMessage: SendMessage | undefined;
+	let sendMessage: SendMessageCallback | undefined;
 
-	function getSendMessage(): SendMessage {
+	function getSendMessage(chatId: number): SendMessage {
 		if (!sendMessage) {
 			throw new Error('send message callback is not specified');
 		}
 
-		return sendMessage;
+		return sendMessage.bind({}, chatId);
 	}
 
 	return {
@@ -49,26 +50,21 @@ export function createRouter<R extends RouteMap>(routes: R): Router<R> {
 			const chatId = message.chat.id;
 
 			const session = storage.getSession(chatId);
-			// TODO: figure out why I need to use brackets here
-			if (!session && freezedRoutes['main']) {
+			if (!session) {
 				storage.saveSession(chatId, {
 					path: 'main',
 					props: {},
 				});
-				getSendMessage()(chatId, ...freezedRoutes['main'].render({}));
+				getSendMessage(chatId)(...freezedRoutes['main'].render({}));
 				return;
 			}
 
-			if (!session) {
-				throw new Error('no session data and main route is not specified');
-			}
-
-			const route = freezedRoutes[session.path as string]; // TODO: fix
+			const route = freezedRoutes[session.path];
 			if (!route) {
 				throw new Error('unexpected router path' + String(session.path));
 			}
 
-			route.onAnswer(session.props, chatId, getSendMessage());
+			route.onAnswer(session.props, getSendMessage(chatId));
 		},
 		setSendMessageCallback(sendMessageCallback) {
 			sendMessage = sendMessageCallback;
