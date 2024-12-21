@@ -4,6 +4,7 @@ import {
   Route,
   SendMessage,
   SendMessageCallback,
+  UpdateProps,
 } from './route';
 import {createStorage, Storage} from './storage';
 import type {SendMessageOptions, Message} from 'node-telegram-bot-api';
@@ -94,13 +95,17 @@ function createNavigator(
     sendMessage(chatId, ...route.initialMessage(props));
   }
 
-  const sendMessage = (
+  function sendMessage(
     chatId: number,
     message: string,
     options: SendMessageOptions,
-  ) => {
+  ): void {
     sendMessageCallback(chatId, message, options);
-  };
+  }
+
+  function updateProps(chatId: number, newProps: Props): void {
+    storage.updateProps(chatId, newProps);
+  }
 
   return {
     onMessage(message) {
@@ -118,7 +123,17 @@ function createNavigator(
         sendMessage(message.chat.id, text, options);
       };
 
-      route.onMessage(props, sessionSendMessage, sessionNavigate, message.text);
+      const sessionUpdateProps: UpdateProps<Props> = (props) => {
+        updateProps(message.chat.id, props);
+      };
+
+      route.onMessage(
+        props,
+        sessionSendMessage,
+        sessionNavigate,
+        sessionUpdateProps,
+        message.text,
+      );
     },
   };
 }

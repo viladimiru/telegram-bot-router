@@ -17,6 +17,8 @@ export type Navigate = <R extends Route<Props>>(
   props: Parameters<R['initialMessage']>[0],
 ) => void;
 
+export type UpdateProps<P extends Props> = (newProps: P) => void;
+
 export interface Route<P extends Props> {
   id: string;
   initialMessage(props: P): RenderReturnType;
@@ -24,6 +26,7 @@ export interface Route<P extends Props> {
     props: P,
     sendMessage: SendMessage,
     navigate: Navigate,
+    updateProps: UpdateProps<P>,
     text?: string,
   ): void;
 }
