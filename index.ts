@@ -3,5 +3,5 @@ export {
   Navigate,
   RenderReturnType,
   SendMessage,
-} from './create-route';
+} from './route';
 export {createRouter, Navigator, Router} from './create-navigator';
