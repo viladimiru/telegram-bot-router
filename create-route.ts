@@ -9,7 +9,7 @@ export type RenderReturnType = [string, SendMessageOptions];
 
 export interface Route<P extends Props = Props> {
   render(props: P): RenderReturnType;
-  onAnswer(
+  onMessage(
     props: P,
     sendMessage: SendMessage,
     navigate: (parameters: {path: string; props: unknown}) => void,

@@ -74,7 +74,7 @@ export function createRouter<R extends RouteMap>(routes: R): Router<R> {
         throw new Error('unexpected router path' + String(session.path));
       }
 
-      route.onAnswer(
+      route.onMessage(
         session.props,
         getSendMessage(chatId),
         // @ts-expect-error TODO: need to fix this
