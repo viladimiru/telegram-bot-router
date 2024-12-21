@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-router",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Telegram bot router with ability to propagate properties between routes",
   "keywords": [
     "tg",
@@ -10,6 +10,7 @@
   ],
   "type": "module",
   "main": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
   "scripts": {
     "eslint-fix": "eslint . --fix",
     "eslint": "eslint .",
@@ -18,14 +19,8 @@
   },
   "author": "Vladimir Valerianov",
   "license": "MIT",
-  "exports": {
-    ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/types/index.d.ts"
-    }
-  },
   "files": [
-    "dist/**"
+    "./dist/**"
   ],
   "devDependencies": {
     "@eslint/js": "^9.13.0",
