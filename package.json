@@ -7,13 +7,14 @@
   "scripts": {
     "eslint-fix": "eslint . --fix",
     "prettier-fix": "prettier . --write",
-    "prepare": "husky && husky install"
+    "prepare": "husky && husky install",
+    "start": "node --watch --loader ts-node/esm bot.ts"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.13.0",
-    "@types/eslint__js": "^8.42.3",
+    "@types/eslint-config-prettier": "^6.11.3",
     "@types/node-telegram-bot-api": "^0.64.7",
     "eslint": "^9.13.0",
     "eslint-config-prettier": "^9.1.0",
@@ -21,6 +22,7 @@
     "husky": "^8.0.0",
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.11.0"
   },
