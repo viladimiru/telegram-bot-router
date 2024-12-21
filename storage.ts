@@ -1,9 +1,9 @@
 export interface RouteData {
-  path: string;
+  routeId: string;
   props: object;
 }
 
-interface Storage {
+export interface Storage {
   saveSession: (chatId: number, routeData: RouteData) => void;
   getSession: (chatId: number) => RouteData | undefined;
 }

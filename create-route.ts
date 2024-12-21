@@ -1,21 +1,24 @@
 import {SendMessageOptions} from 'node-telegram-bot-api';
 
-export type SendMessage = (
+export type Props = object;
+
+export type RenderReturnType = [string, SendMessageOptions];
+
+export type SendMessageCallback = (
+  chatId: number,
   message: string,
   options: SendMessageOptions,
 ) => void;
-export type Props = object;
-export type RenderReturnType = [string, SendMessageOptions];
 
-export interface Route<P extends Props = Props> {
-  render(props: P): RenderReturnType;
-  onMessage(
-    props: P,
-    sendMessage: SendMessage,
-    navigate: (parameters: {path: string; props: unknown}) => void,
-  ): void;
-}
+export type SendMessage = (text: string, options: SendMessageOptions) => void;
 
-export function createRoute<R extends Route>(route: R): R {
-  return route;
+export type Navigate = <R extends Route<Props>>(
+  route: R,
+  props: Parameters<R['initialMessage']>[0],
+) => void;
+
+export interface Route<P extends Props> {
+  id: string;
+  initialMessage(props: P): RenderReturnType;
+  onMessage(props: P, sendMessage: SendMessage, navigate: Navigate): void;
 }

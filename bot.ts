@@ -1,6 +1,6 @@
 import TelegramApi from 'node-telegram-bot-api';
-import {router} from './router';
 import {configDotenv} from './node_modules/dotenv/lib/main';
+import {createNavigator} from './navigator';
 
 configDotenv();
 
@@ -12,10 +12,8 @@ const bot = new TelegramApi(process.env['TG_BOT_TOKEN'], {
   polling: true,
 });
 
-bot.on('message', (message) => {
-  router.getActiveRoute(message);
-});
+const navigator = createNavigator(bot.sendMessage.bind(bot));
+
+bot.on('message', navigator.onMessage);
 
 bot.on('polling_error', (error) => console.log(error));
-
-router.setSendMessageCallback(bot.sendMessage.bind(bot));
