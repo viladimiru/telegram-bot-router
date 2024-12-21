@@ -16,4 +16,7 @@ export default tseslint.config(
       'prettier/prettier': 'error',
     },
   },
+  {
+    ignores: ['dist', 'node_modules'],
+  },
 );

@@ -12,6 +12,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "eslint-fix": "eslint . --fix",
+    "eslint": "eslint .",
     "prettier-fix": "prettier . --write",
     "prepare": "husky && husky install"
   },
