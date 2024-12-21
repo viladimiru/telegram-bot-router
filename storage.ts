@@ -1,6 +1,6 @@
 export interface RouteData {
   path: string;
-  props: Record<string, unknown>;
+  props: object;
 }
 
 interface Storage {
