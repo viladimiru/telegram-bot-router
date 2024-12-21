@@ -118,7 +118,7 @@ function createNavigator(
         sendMessage(message.chat.id, text, options);
       };
 
-      route.onMessage(props, sessionSendMessage, sessionNavigate);
+      route.onMessage(props, sessionSendMessage, sessionNavigate, message.text);
     },
   };
 }
