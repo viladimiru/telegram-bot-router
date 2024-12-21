@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "target": "ES2020",
     "alwaysStrict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -22,6 +23,7 @@
     "noImplicitUseStrict": false,
     "suppressExcessPropertyErrors": false,
     "suppressImplicitAnyIndexErrors": false,
-    "noStrictGenericChecks": false
+    "noStrictGenericChecks": false,
+    "allowSyntheticDefaultImports": true,
   }
 }
