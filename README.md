@@ -20,7 +20,7 @@ const routeOne: Route<RouteOneProps> = {
     return [props.text, {}];
   },
   onMessage(_props, _message, {sessionNavigate}) {
-    navigate(routeTwo, {
+    sessionNavigate(routeTwo, {
       anyObject: {
         value: 'value',
       },
@@ -41,7 +41,7 @@ const routeTwo: Route<RouteTwoProps> = {
     return [props.anyObject.value, {}];
   },
   onMessage(_props, _message, {sessionNavigate}) {
-    navigate(routeOne, {
+    sessionNavigate(routeOne, {
       text: 'some text',
     });
   },
