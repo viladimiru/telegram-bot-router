@@ -19,13 +19,14 @@ const routeOne: Route<RouteOneProps> = {
   initialMessage(props) {
     return [props.text, {}];
   },
-  onMessage(_props, _sendMessage, navigate) {
+  onMessage(_props, _message, {sessionNavigate}) {
     navigate(routeTwo, {
       anyObject: {
         value: 'value',
       },
     });
   },
+  onCallback() {}
 };
 
 interface RouteTwoProps {
@@ -39,21 +40,25 @@ const routeTwo: Route<RouteTwoProps> = {
   initialMessage(props) {
     return [props.anyObject.value, {}];
   },
-  onMessage(_props, _sendMessage, navigate) {
+  onMessage(_props, _message, {sessionNavigate}) {
     navigate(routeOne, {
       text: 'some text',
     });
   },
+  onCallback() {}
 };
 
 const bot = new TelegramApi(...);
 const sendMessageCallback = bot.sendMessage.bind(bot);
+const answerCallbackQueryCallback = bot.answerCallbackQuery.bind(bot);
 
 const navigator = createRouter()
   .setEntryRoute(routeOne)
   .registerRoute(routeTwo)
   .registerSendMessageCallback(sendMessageCallback)
+  .registerAnswerCallbackQueryCallback(answerCallbackQueryCallback)
   .createNavigator();
 
 bot.on('message', navigator.onMessage);
+bot.on('callback_query', navigator.onCallbackQuery);
 ```
