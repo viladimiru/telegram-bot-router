@@ -4,9 +4,11 @@ This library was created to resolve navigation proposals for telegram bots.
 
 ## Quick start
 
-`npm i telegram-bot-router`
-
+```terminal
+npm i telegram-bot-router node-telegram-bot-api @types/node-telegram-bot-api
 ```
+
+```typescript
 import {createRouter, Route} from 'telegram-bot-router';
 import TelegramApi from 'node-telegram-bot-api'
 
