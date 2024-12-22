@@ -6,6 +6,7 @@ import {
   Route,
   SendMessage,
   SendMessageCallback,
+  TgApi,
   UpdateProps,
 } from './route.js';
 import {createStorage, Storage} from './storage.js';
@@ -29,8 +30,8 @@ export interface Router {
 }
 
 export interface Navigator {
-  onMessage(message: Message): void;
-  onCallbackQuery(query: CallbackQuery): void;
+  onMessage(message: Message): Promise<void>;
+  onCallbackQuery(query: CallbackQuery): Promise<void>;
 }
 
 interface RouteRegistry {
@@ -147,7 +148,7 @@ function createNavigator(
     answerCallbackQueryCallback(callbackQueryData, options);
   }
 
-  function getSessionMethods(chatId: number) {
+  function getTgApiMethods<P extends Props>(chatId: number): TgApi<P> {
     const sessionNavigate: Navigate = (route, props) => {
       navigate(chatId, route, props);
     };
@@ -172,6 +173,7 @@ function createNavigator(
       sessionSendMessage,
       sessionUpdateProps,
       sessionAnswerCallbackQuery,
+      outerSendMessage: sendMessageCallback,
     };
   }
 
@@ -193,18 +195,9 @@ function createNavigator(
         return;
       }
 
-      const {sessionNavigate, sessionSendMessage, sessionUpdateProps} =
-        getSessionMethods(message.chat.id);
-
-      route.onMessage(
-        props,
-        sessionSendMessage,
-        sessionNavigate,
-        sessionUpdateProps,
-        message.text,
-      );
+      await route.onMessage(props, message, getTgApiMethods(message.chat.id));
     },
-    onCallbackQuery(query: CallbackQuery): void {
+    async onCallbackQuery(query: CallbackQuery) {
       if (!query.message) {
         throw new Error('Unhandled error. Query without message.');
       }
@@ -216,21 +209,7 @@ function createNavigator(
         message.chat.id,
       );
 
-      const {
-        sessionNavigate,
-        sessionSendMessage,
-        sessionUpdateProps,
-        sessionAnswerCallbackQuery,
-      } = getSessionMethods(message.chat.id);
-
-      route.onCallback(
-        props,
-        sessionSendMessage,
-        sessionNavigate,
-        sessionUpdateProps,
-        query,
-        sessionAnswerCallbackQuery,
-      );
+      await route.onCallback(props, query, getTgApiMethods(message.chat.id));
     },
   };
 }

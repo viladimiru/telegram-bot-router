@@ -36,22 +36,21 @@ export type Navigate = <R extends Route<Props>>(
 
 export type UpdateProps<P extends Props> = (newProps: P) => void;
 
+export interface TgApi<P extends Props> {
+  sessionNavigate: Navigate;
+  sessionSendMessage: SendMessage;
+  sessionUpdateProps: UpdateProps<P>;
+  sessionAnswerCallbackQuery: AnswerCallbackQuery;
+  outerSendMessage: SendMessageCallback;
+}
+
 export type Route<P extends Props> = Readonly<{
   id: string;
   initialMessage(props: P): RenderReturnType | Promise<RenderReturnType>;
-  onMessage(
-    props: P,
-    sendMessage: SendMessage,
-    navigate: Navigate,
-    updateProps: UpdateProps<P>,
-    text?: string,
-  ): void | Promise<void>;
+  onMessage(props: P, message: Message, tgApi: TgApi<P>): void | Promise<void>;
   onCallback(
     props: P,
-    sendMessage: SendMessage,
-    navigate: Navigate,
-    updateProps: UpdateProps<P>,
     callbackQuery: CallbackQuery,
-    answerCallbackQuery: AnswerCallbackQuery,
+    tgApi: TgApi<P>,
   ): void | Promise<void>;
 }>;
