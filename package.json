@@ -15,7 +15,8 @@
     "eslint-fix": "eslint . --fix",
     "eslint": "eslint .",
     "prettier-fix": "prettier . --write",
-    "prepare": "husky && husky install"
+    "prepare": "husky && husky install",
+    "build": "rm -rf dist && npx tsc"
   },
   "author": "Vladimir Valerianov",
   "license": "MIT",

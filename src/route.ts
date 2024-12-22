@@ -1,6 +1,7 @@
 import type {
   AnswerCallbackQueryOptions,
   CallbackQuery,
+  Message,
   SendMessageOptions,
 } from 'node-telegram-bot-api';
 
@@ -12,14 +13,17 @@ export type SendMessageCallback = (
   chatId: number,
   message: string,
   options: SendMessageOptions,
-) => void;
+) => Promise<Message>;
 
 export type AnswerCallbackQueryCallback = (
   callbackQueryData: string,
   answerCallbackQueryOptions: AnswerCallbackQueryOptions,
 ) => void;
 
-export type SendMessage = (text: string, options: SendMessageOptions) => void;
+export type SendMessage = (
+  text: string,
+  options: SendMessageOptions,
+) => Promise<Message>;
 export type AnswerCallbackQuery = (
   callbackQueryData: string,
   options: AnswerCallbackQueryOptions,
@@ -32,16 +36,16 @@ export type Navigate = <R extends Route<Props>>(
 
 export type UpdateProps<P extends Props> = (newProps: P) => void;
 
-export interface Route<P extends Props> {
+export type Route<P extends Props> = Readonly<{
   id: string;
-  initialMessage(props: P): RenderReturnType;
+  initialMessage(props: P): RenderReturnType | Promise<RenderReturnType>;
   onMessage(
     props: P,
     sendMessage: SendMessage,
     navigate: Navigate,
     updateProps: UpdateProps<P>,
     text?: string,
-  ): void;
+  ): void | Promise<void>;
   onCallback(
     props: P,
     sendMessage: SendMessage,
@@ -49,5 +53,5 @@ export interface Route<P extends Props> {
     updateProps: UpdateProps<P>,
     callbackQuery: CallbackQuery,
     answerCallbackQuery: AnswerCallbackQuery,
-  ): void;
-}
+  ): void | Promise<void>;
+}>;

@@ -115,20 +115,25 @@ function createNavigator(
 ): Navigator {
   const storage = createStorage();
 
-  function navigate(chatId: number, route: RouteWithProps, props: Props): void {
+  async function navigate(
+    chatId: number,
+    route: RouteWithProps,
+    props: Props,
+  ): Promise<void> {
     storage.saveSession(chatId, {
       routeId: route.id,
       props,
     });
-    sendMessage(chatId, ...route.initialMessage(props));
+    const initialMessage = await route.initialMessage(props);
+    sendMessage(chatId, ...initialMessage);
   }
 
   function sendMessage(
     chatId: number,
     message: string,
     options: SendMessageOptions,
-  ): void {
-    sendMessageCallback(chatId, message, options);
+  ): Promise<Message> {
+    return sendMessageCallback(chatId, message, options);
   }
 
   function updateProps(chatId: number, newProps: Props): void {
@@ -148,7 +153,7 @@ function createNavigator(
     };
 
     const sessionSendMessage: SendMessage = (text, options) => {
-      sendMessage(chatId, text, options);
+      return sendMessage(chatId, text, options);
     };
 
     const sessionUpdateProps: UpdateProps<Props> = (props) => {
@@ -171,7 +176,7 @@ function createNavigator(
   }
 
   return {
-    onMessage(message) {
+    async onMessage(message) {
       const {route, props, initial} = getCurrentRouteWithProps(
         routeRegistry,
         storage,
@@ -183,7 +188,8 @@ function createNavigator(
           routeId: routeRegistry.entryRoute.id,
           props: {},
         });
-        sendMessageCallback(message.chat.id, ...route.initialMessage({}));
+        const initialMessage = await route.initialMessage({});
+        sendMessageCallback(message.chat.id, ...initialMessage);
         return;
       }
 
