@@ -10,37 +10,20 @@ import {
   UpdateProps,
 } from './route.js';
 import {createStorage, Storage} from './storage.js';
-import type {
-  SendMessageOptions,
-  Message,
-  CallbackQuery,
-  AnswerCallbackQueryOptions,
-} from 'node-telegram-bot-api';
+import type {Message, CallbackQuery} from 'node-telegram-bot-api';
 
 type RouteWithProps = Route<Props>;
 
-export interface Router {
-  setEntryRoute(route: RouteWithProps): this;
-  registerRoute(route: RouteWithProps): this;
-  registerSendMessageCallback(sendMessageCallback: SendMessageCallback): this;
-  registerAnswerCallbackQueryCallback(
-    answerCallbackQueryCallback: AnswerCallbackQueryCallback,
-  ): this;
-  createNavigator(): Navigator;
-}
-
-export interface Navigator {
+export interface Router<T extends CreateRouterOptions> {
   onMessage(message: Message): Promise<void>;
   onCallbackQuery(query: CallbackQuery): Promise<void>;
+  resetSession(chatId: number): Promise<void>;
+  getEntryRoute(): T['entryRoute'];
 }
 
 interface RouteRegistry {
-  entryRoute: RouteWithProps;
+  entryRoute: Route<{}>;
   routes: RouteWithProps[];
-}
-
-interface RawRouteRegistry extends Omit<RouteRegistry, 'entryRoute'> {
-  entryRoute?: RouteRegistry['entryRoute'];
 }
 
 interface SessionRouteWithProps {
@@ -49,72 +32,31 @@ interface SessionRouteWithProps {
   initial?: boolean;
 }
 
-export function createRouter(): Router {
-  const routeRegistry: RawRouteRegistry = {
-    routes: [],
-  };
-  let _sendMessageCallback: SendMessageCallback | undefined;
-  let _answerCallbackQueryCallback: AnswerCallbackQueryCallback | undefined;
-
-  return {
-    setEntryRoute(route) {
-      routeRegistry.entryRoute = route;
-      routeRegistry.routes.push(route);
-      return this;
-    },
-    registerRoute(route) {
-      const routeIds = routeRegistry.routes.map(({id}) => id);
-      if (routeIds.includes(route.id)) {
-        throw new Error(
-          `Unable to register route with duplicated id: ${route.id}`,
-        );
-      }
-      routeRegistry.routes.push(route);
-      return this;
-    },
-    registerSendMessageCallback(sendMessageCallback: SendMessageCallback) {
-      _sendMessageCallback = sendMessageCallback;
-      return this;
-    },
-    registerAnswerCallbackQueryCallback(answerCallbackQueryCallback) {
-      _answerCallbackQueryCallback = answerCallbackQueryCallback;
-      return this;
-    },
-    createNavigator() {
-      const {entryRoute, routes} = routeRegistry;
-      if (!entryRoute) {
-        throw new Error(
-          'Unable to create navigator without entryRoute in registry',
-        );
-      }
-
-      if (!_sendMessageCallback) {
-        throw new Error(
-          'Unable to create navigator without sendMessageCallback in registry',
-        );
-      }
-
-      if (!_answerCallbackQueryCallback) {
-        throw new Error(
-          'Unable to create navigator without answerCallbackQueryCallback in registry',
-        );
-      }
-
-      return createNavigator(
-        {entryRoute, routes},
-        _sendMessageCallback,
-        _answerCallbackQueryCallback,
-      );
-    },
+interface CreateRouterOptions {
+  entryRoute: RouteWithProps;
+  routes: RouteWithProps[];
+  tgApiCallbacks: {
+    sendMessage: SendMessageCallback;
+    answerCallbackQuery: AnswerCallbackQueryCallback;
   };
 }
 
-function createNavigator(
-  routeRegistry: RouteRegistry,
-  sendMessageCallback: SendMessageCallback,
-  answerCallbackQueryCallback: AnswerCallbackQueryCallback,
-): Navigator {
+export function createRouter<T extends CreateRouterOptions>(
+  options: T,
+): Router<T> {
+  const {entryRoute, routes: initialRoutes, tgApiCallbacks} = options;
+
+  const routes: RouteWithProps[] = [...initialRoutes];
+  const entryRouteIncluded = routes.some((route) => route.id === entryRoute.id);
+  if (!entryRouteIncluded) {
+    routes.push(entryRoute);
+  }
+
+  const routeRegistry: RouteRegistry = {entryRoute, routes};
+
   const storage = createStorage();
+
+  const {sendMessage, answerCallbackQuery} = tgApiCallbacks;
 
   async function navigate(
     chatId: number,
@@ -129,23 +71,8 @@ function createNavigator(
     sendMessage(chatId, ...initialMessage);
   }
 
-  function sendMessage(
-    chatId: number,
-    message: string,
-    options: SendMessageOptions,
-  ): Promise<Message> {
-    return sendMessageCallback(chatId, message, options);
-  }
-
   function updateProps(chatId: number, newProps: Props): void {
     storage.updateProps(chatId, newProps);
-  }
-
-  function answerCallbackQuery(
-    callbackQueryData: string,
-    options: AnswerCallbackQueryOptions,
-  ): void {
-    answerCallbackQueryCallback(callbackQueryData, options);
   }
 
   function getTgApiMethods<P extends Props>(chatId: number): TgApi<P> {
@@ -173,14 +100,14 @@ function createNavigator(
       sessionSendMessage,
       sessionUpdateProps,
       sessionAnswerCallbackQuery,
-      outerSendMessage: sendMessageCallback,
+      outerSendMessage: sendMessage,
     };
   }
 
   return {
     async onMessage(message) {
       const {route, props, initial} = getCurrentRouteWithProps(
-        routeRegistry,
+        {entryRoute, routes},
         storage,
         message.chat.id,
       );
@@ -191,7 +118,7 @@ function createNavigator(
           props: {},
         });
         const initialMessage = await route.initialMessage({});
-        sendMessageCallback(message.chat.id, ...initialMessage);
+        sendMessage(message.chat.id, ...initialMessage);
         return;
       }
 
@@ -210,6 +137,15 @@ function createNavigator(
       );
 
       await route.onCallback(props, query, getTgApiMethods(message.chat.id));
+    },
+    async resetSession(chatId) {
+      storage.saveSession(chatId, {
+        routeId: entryRoute.id,
+        props: {},
+      });
+    },
+    getEntryRoute() {
+      return entryRoute;
     },
   };
 }
