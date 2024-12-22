@@ -49,16 +49,16 @@ const routeTwo: Route<RouteTwoProps> = {
 };
 
 const bot = new TelegramApi(...);
-const sendMessageCallback = bot.sendMessage.bind(bot);
-const answerCallbackQueryCallback = bot.answerCallbackQuery.bind(bot);
 
-const navigator = createRouter()
-  .setEntryRoute(routeOne)
-  .registerRoute(routeTwo)
-  .registerSendMessageCallback(sendMessageCallback)
-  .registerAnswerCallbackQueryCallback(answerCallbackQueryCallback)
-  .createNavigator();
+const router = createRouter({
+  entryRoute: routeOne,
+  routes: [routeTwo],
+  tgApiCallbacks: {
+    sendMessage: bot.sendMessage.bind(bot),
+    answerCallbackQuery: bot.answerCallbackQuery.bind(bot),
+  },
+});
 
-bot.on('message', navigator.onMessage);
-bot.on('callback_query', navigator.onCallbackQuery);
+bot.on('message', router.onMessage);
+bot.on('callback_query', router.onCallbackQuery);
 ```
